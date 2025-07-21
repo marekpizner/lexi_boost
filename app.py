@@ -77,19 +77,19 @@ CEFR: B2\nFrequency: Medium
 
             # --- Definition ---
             st.markdown("### 📖 Definition")
-            definition_prompt = f"Give a simple, clear definition of the English word '{word}'."
+            definition_prompt = f"Give a simple, clear definition of the English word '{word}'. If word has double meaning, provide both. No provide simple clear output without any additional text."
             definition = ask_openai(definition_prompt, spinner_message="Loading definition...")
             st.markdown(definition)
 
             # --- Contextual Example ---
             st.markdown("### 🧠 Contextual Example")
-            example_prompt = f"Give a contextual sentence using the word '{word}'."
+            example_prompt = f"Give a contextual sentence using the word '{word}'. if word has multiple meanings, provide examples for each."
             example = ask_openai(example_prompt, spinner_message="Loading contextual example...")
             st.markdown(example)
 
             # --- Synonyms ---
             st.markdown("### 🔁 Synonyms")
-            synonym_prompt = f"List 3-5 synonyms for the word '{word}' in a bullet list. Start with the header '### Synonyms'."
+            synonym_prompt = f"List 3-5 (if available) synonyms for the word '{word}' in a bullet list. If the word has multiple meanings, provide synonyms for each meaning grouped accordingly. Output the result as a clean bullet list starting with the header '### Synonyms' without any additional text."
             synonyms = ask_openai(synonym_prompt, spinner_message="Loading synonyms...")
             linked_synonyms = linkify_list_section(synonyms, section_header_keywords=["synonym"])
             linked_synonyms = re.sub(r"^### Synonyms\n", "", linked_synonyms, flags=re.MULTILINE)
@@ -97,7 +97,7 @@ CEFR: B2\nFrequency: Medium
 
             # --- Phonetically Similar Words ---
             st.markdown("### 🔊 Phonetically Similar Words")
-            phonetic_prompt = f"List 3 English words that sound similar to the word '{word}', in a bullet list. Start with the header '### Phonetically Similar Words'."
+            phonetic_prompt = f"List 3 (if available) English words that sound similar to the word '{word}', in a bullet list. Ensure the words are reasonably phonetically related. Start with the header '### Phonetically Similar Words'. Output the result as a clean bullet list of word suggestions  without any additional text."
             phonetics = ask_openai(phonetic_prompt, spinner_message="Loading phonetically similar words...")
             linked_phonetics = linkify_list_section(phonetics, section_header_keywords=["phonetically"])
             linked_phonetics = re.sub(r"^### Phonetically Similar Words\n", "", linked_phonetics, flags=re.MULTILINE)
@@ -119,8 +119,10 @@ with tab2:
 
     if trigger_sentence and user_sentence:
         tense_prompt = f"""
-Take the following sentence and rewrite it in the major English tenses. Add explanations for each tense (how to form it) and highlight the tense constructions (e.g., **bold** the helping verbs or main tense indicators) If you have to you can extend sentence by adding more context.
+Take the following sentence and rewrite it in the major English tenses. Add explanations for each tense (how to form it) and highlight the tense constructions (e.g., **bold** the helping verbs or main tense indicators). If necessary, extend the sentence slightly for clarity (e.g., for Past Perfect).
+
 Sentence: "{user_sentence}"
+
 Include:
 - Present Simple
 - Present Continuous
@@ -134,9 +136,13 @@ Include:
 - Second Conditional
 - Third Conditional
 
-Label each tense and highlight tense constructions (e.g., bold the helping verbs or main tense indicators).
-Use markdown.
-Do not include any other text or explanations outside the tense variations.
+Format each tense as follows:
+1. Tense Name
+2. Example sentence (with highlighted structure using **bold**)
+2. Description of how it works
+3. How to form it
+
+Use markdown formatting only. Do not include any introductory or summary text.
 """
         tenses_output = ask_openai(tense_prompt, spinner_message="Generating tense variations...")
         st.markdown(tenses_output)
