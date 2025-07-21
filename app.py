@@ -26,13 +26,15 @@ def linkify_list_section(text: str, section_header_keywords: list[str]) -> str:
                 break
 
         if current_section in ["synonym", "phonetically"] and re.match(r"^- ", line.strip()):
-            word_only = line.strip().lstrip("- ").strip()
-            link = f"[{word_only}](?word={word_only})"
-            result.append(f"- {link}")
+            phrase = line.strip().lstrip("- ").strip()
+            if phrase:
+                link = f"[{phrase}](?word={phrase.replace(' ', '%20')})"
+                result.append(f"- {link}")
         else:
             result.append(line)
 
     return "\n".join(result)
+
 
 # OpenAI prompt function with spinner
 def ask_openai(prompt, spinner_message="Loading..."):
@@ -47,7 +49,9 @@ def ask_openai(prompt, spinner_message="Loading..."):
                 temperature=0.7,
                 timeout=30,
             )
-            return response.choices[0].message.content.strip()
+            response = response.choices[0].message.content.strip()
+            print(f"OpenAI response: {response}")  # Debugging output
+            return response
         except Exception as e:
             return f"Error: {str(e)}"
 
@@ -66,30 +70,31 @@ with tab1:
 
     if trigger_word and word:
         with st.container():
-            # --- CEFR Level & Frequency ---
+ # --- CEFR Level & Frequency ---
             prompt_meta = f"""
-Estimate the CEFR level (A1 to C2) and frequency (common / medium / rare) of the English word: "{word}".
-Respond in this format:
-CEFR: B2\nFrequency: Medium
+Give only the CEFR level (A1–C2) and word frequency (common, medium, rare) for the English word: "{word}".
+Format exactly like this:
+CEFR: B2
+Frequency: Medium
 """
             meta = ask_openai(prompt_meta, spinner_message="Analyzing CEFR level & frequency...")
             st.markdown(f"**📊 Word Level Info**\n\n{meta}")
 
             # --- Definition ---
             st.markdown("### 📖 Definition")
-            definition_prompt = f"Give a simple, clear definition of the English word '{word}'. If word has double meaning, provide both. No provide simple clear output without any additional text."
+            definition_prompt = f"Provide a concise definition of the word '{word}' using simple language. If the word has multiple meanings, include each meaning separately in a short, clear format. Do not include introductions or conclusions."
             definition = ask_openai(definition_prompt, spinner_message="Loading definition...")
             st.markdown(definition)
 
             # --- Contextual Example ---
             st.markdown("### 🧠 Contextual Example")
-            example_prompt = f"Give a contextual sentence using the word '{word}'. if word has multiple meanings, provide examples for each."
+            example_prompt = f"Write 1–2 short, natural English sentences using the word '{word}' in context. If there are multiple meanings, include one sentence per meaning. Do not add any commentary or explanation."
             example = ask_openai(example_prompt, spinner_message="Loading contextual example...")
             st.markdown(example)
 
             # --- Synonyms ---
             st.markdown("### 🔁 Synonyms")
-            synonym_prompt = f"List 3-5 (if available) synonyms for the word '{word}' in a bullet list. If the word has multiple meanings, provide synonyms for each meaning grouped accordingly. Output the result as a clean bullet list starting with the header '### Synonyms' without any additional text."
+            synonym_prompt = f"List 3–5 synonyms of the word '{word}' as a clean bullet list. If the word has multiple meanings, provide synonyms for each meaning, but make output one. Start with '### Synonyms' and do not include any explanation or intro text."
             synonyms = ask_openai(synonym_prompt, spinner_message="Loading synonyms...")
             linked_synonyms = linkify_list_section(synonyms, section_header_keywords=["synonym"])
             linked_synonyms = re.sub(r"^### Synonyms\n", "", linked_synonyms, flags=re.MULTILINE)
@@ -97,7 +102,7 @@ CEFR: B2\nFrequency: Medium
 
             # --- Phonetically Similar Words ---
             st.markdown("### 🔊 Phonetically Similar Words")
-            phonetic_prompt = f"List 3 (if available) English words that sound similar to the word '{word}', in a bullet list. Ensure the words are reasonably phonetically related. Start with the header '### Phonetically Similar Words'. Output the result as a clean bullet list of word suggestions  without any additional text."
+            phonetic_prompt = f"List 3 English words that sound similar to '{word}'. Format as a bullet list starting with '### Phonetically Similar Words'. Do not include any explanation or filler text."
             phonetics = ask_openai(phonetic_prompt, spinner_message="Loading phonetically similar words...")
             linked_phonetics = linkify_list_section(phonetics, section_header_keywords=["phonetically"])
             linked_phonetics = re.sub(r"^### Phonetically Similar Words\n", "", linked_phonetics, flags=re.MULTILINE)
@@ -105,6 +110,7 @@ CEFR: B2\nFrequency: Medium
 
             # External link for pronunciation
             st.markdown(f"[📚 Hear on Cambridge Dictionary](https://dictionary.cambridge.org/dictionary/english/{word.lower()})")
+
 
 # ---- Tab 2: Sentence Tense Transformer ----
 with tab2:
