@@ -70,7 +70,6 @@ async def fetch_word_data(word: str, language: str):
     Provide the CEFR level (A1–C2) and frequency (common, medium, rare) for the word "{word}".
     Respond using **exactly** this format (no extra text):
 
-    ### Word Info
     - **Word:** {word}
     - **CEFR:** B2
     - **Frequency:** Medium
