@@ -78,6 +78,7 @@ async def fetch_word_data(word: str, language: str):
         "definition": (REASONING_MODEL, f"""
     Provide a clear, concise definition of the word "{word}" in simple English. 
     If the word has multiple meanings, list each meaning as a separate bullet point. 
+    And provide some ways to remember it.
     Do not include any introduction or conclusion. Use this format:
 
     - meaning 1
